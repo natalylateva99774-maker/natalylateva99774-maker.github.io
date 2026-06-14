@@ -1,1 +1,576 @@
 # natalylateva99774-maker.github.io
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3dbuild – профессиональные ЦИМ-модели для строительства будущего</title>
+    <meta name="description" content="3dbuild – разработка информационных моделей зданий (ЦИМ/BIM) уровней LOD 300-400. Точность данных, контроль коллизий, экономия ресурсов.">
+    <meta name="keywords" content="BIM, ЦИМ, 3D модель, LOD 400, клишинг, Revit, информационное моделирование">
+    <meta name="author" content="3dbuild">
+    <meta property="og:title" content="3dbuild – ЦИМ-модели для строительства будущего">
+    <meta property="og:description" content="Интерактивные BIM модели LOD 300-400. Контроль коллизий, экономия ресурсов.">
+    <meta property="og:type" content="website">
+    <!-- Favicon - КРУГЛАЯ ИКОНКА -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%2300525e'/%3E%3Ctext x='50' y='67' font-size='50' text-anchor='middle' fill='%23ffffff' font-weight='bold'%3E3D%3C/text%3E%3C/svg%3E">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #0a0a1a; color: #f0f0f0; overflow-x: hidden; }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; z-index: 0; overflow: hidden; }
+        
+        .static-preview { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: #0a0a1a; z-index: 1; display: none; align-items: center; justify-content: center; }
+        .static-preview.active { display: flex; }
+        .static-preview .preview-content { text-align: center; background: rgba(0,0,0,0.6); padding: 20px 40px; border-radius: 40px; backdrop-filter: blur(8px); }
+        .preview-content button { background: #ff6b35; border: none; padding: 12px 28px; font-size: 1.2rem; font-weight: bold; border-radius: 40px; cursor: pointer; color: white; margin-top: 20px; transition: 0.2s; }
+        .preview-content button:hover { background: #ff5722; transform: scale(1.02); }
+        
+        .content-layer { position: relative; z-index: 2; pointer-events: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background: rgba(10,10,26,0.4); backdrop-filter: blur(12px); position: fixed; width: 100%; top: 0; z-index: 100; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(135deg, #fff, #4db8ff); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: -0.5px; }
+        nav ul { display: flex; gap: 32px; list-style: none; }
+        nav ul li a { color: #f0f0f0; text-decoration: none; font-weight: 500; transition: 0.2s; font-size: 1rem; }
+        nav ul li a:hover { color: #ff8c42; }
+        .menu-icon { display: none; font-size: 1.8rem; cursor: pointer; }
+        
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 120px 5% 80px; position: relative; }
+        .hero-content { max-width: 900px; background: rgba(10,10,26,0.35); backdrop-filter: blur(10px); border-radius: 48px; padding: 40px 48px; border: 1px solid rgba(255,255,255,0.2); box-shadow: 0 25px 40px rgba(0,0,0,0.3); }
+        .hero h1 { font-size: 3.2rem; font-weight: 700; margin-bottom: 20px; line-height: 1.2; }
+        .hero p { font-size: 1.2rem; margin-bottom: 32px; opacity: 0.9; }
+        .btn-group { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+        .btn-primary { background: #ff6b35; border: none; padding: 14px 32px; font-size: 1rem; font-weight: 600; border-radius: 40px; cursor: pointer; transition: 0.2s; color: white; box-shadow: 0 5px 15px rgba(255,107,53,0.3); }
+        .btn-primary:hover { background: #ff5722; transform: translateY(-2px); }
+        .btn-secondary { background: rgba(255,255,255,0.15); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.4); padding: 14px 32px; font-size: 1rem; font-weight: 600; border-radius: 40px; cursor: pointer; transition: 0.2s; color: white; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.3); }
+        
+        section { padding: 80px 5% 40px; background: rgba(10,15,25,0.85); backdrop-filter: blur(2px); margin-top: 20px; }
+        .section-title { text-align: center; font-size: 2.4rem; margin-bottom: 50px; font-weight: 700; background: linear-gradient(135deg, #fff, #7bc5ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .tech-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; margin-bottom: 30px; }
+        .tech-icon { background: #1e2a3a; padding: 20px; border-radius: 30px; width: 120px; text-align: center; transition: 0.2s; border: 1px solid #2c3e50; }
+        .tech-icon i { font-size: 3.5rem; color: #ff8c42; }
+        .tech-icon span { display: block; margin-top: 12px; font-weight: 500; }
+        .services-grid, .cases-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1300px; margin: 0 auto; }
+        .service-card, .case-card { background: rgba(30,40,55,0.7); backdrop-filter: blur(4px); border-radius: 28px; padding: 30px; border: 1px solid rgba(255,255,255,0.1); transition: 0.25s; }
+        .service-card i, .case-card i { font-size: 2.5rem; color: #ff8c42; margin-bottom: 20px; }
+        .service-card h3, .case-card h3 { font-size: 1.6rem; margin-bottom: 15px; }
+        .case-card p { color: #bbb; margin-top: 10px; }
+        .case-card small { color: #ff8c42; font-weight: bold; }
+        .form-container { max-width: 700px; margin: 0 auto; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); padding: 40px; border-radius: 40px; border: 1px solid rgba(255,255,255,0.2); }
+        .form-group { margin-bottom: 20px; }
+        .form-group input, .form-group select { width: 100%; padding: 14px 18px; border-radius: 60px; border: none; background: rgba(255,255,255,0.1); color: white; font-size: 1rem; outline: none; transition: 0.2s; }
+        .form-group input::placeholder { color: rgba(255,255,255,0.6); }
+        .form-group input:focus, .form-group select:focus { background: rgba(255,255,255,0.2); border-left: 3px solid #ff8c42; }
+        .form-group select option { background: #1e2a3a; }
+        
+        /* ПОДВАЛ - УМЕНЬШЕННАЯ ШИРИНА */
+        footer {
+            background: rgba(5, 8, 15, 0.95);
+            backdrop-filter: blur(12px);
+            padding: 40px 5% 25px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 40px;
+        }
+        .footer-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 30px;
+        }
+        .footer-col h4 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #ff8c42;
+            font-weight: 600;
+        }
+        .footer-col p {
+            color: #aaa;
+            line-height: 1.5;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+        .footer-col .contact-info {
+            margin-top: 10px;
+        }
+        .footer-col .contact-info p {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .footer-col .contact-info i {
+            width: 22px;
+            color: #ff8c42;
+            font-size: 0.85rem;
+        }
+        .social-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            color: white;
+            transition: 0.3s;
+            font-size: 1rem;
+        }
+        .social-links a:hover {
+            background: #ff8c42;
+            transform: translateY(-3px);
+        }
+        .footer-bottom {
+            text-align: center;
+            padding-top: 25px;
+            margin-top: 25px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0a0a1a; z-index: 1000; display: flex; align-items: center; justify-content: center; flex-direction: column; transition: 0.5s; }
+        .loader-text { margin-top: 20px; color: white; font-weight: 500; }
+        .progress-bar { width: 260px; height: 6px; background: #2c3e50; border-radius: 10px; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: #ff6b35; transition: width 0.2s; }
+        
+        @media (max-width: 1024px) { .hero h1 { font-size: 2.5rem; } .hero-content { padding: 30px 30px; } }
+        @media (max-width: 768px) { 
+            nav ul { display: none; } 
+            .menu-icon { display: block; color: white; } 
+            nav ul.active { display: flex; flex-direction: column; position: absolute; top: 70px; right: 20px; background: rgba(0,0,0,0.9); padding: 20px; border-radius: 20px; gap: 15px; backdrop-filter: blur(12px); } 
+            .hero h1 { font-size: 2rem; } 
+            .btn-group { flex-direction: column; align-items: center; } 
+            .btn-primary, .btn-secondary { width: 80%; } 
+            section { padding: 60px 5% 30px; }
+            .footer-container { grid-template-columns: 1fr; text-align: center; gap: 25px; }
+            .footer-col .contact-info p { justify-content: center; }
+            .social-links { justify-content: center; }
+        }
+        @media (max-width: 480px) { .hero-content { padding: 20px; } }
+    </style>
+</head>
+<body>
+
+<div id="loader">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="loader-text">Загрузка BIM-модели <span id="loadingPercent">0</span>%</div>
+</div>
+
+<div id="canvas-container"></div>
+<div class="static-preview" id="staticPreview">
+    <div class="preview-content">
+        <i class="fas fa-cube" style="font-size: 48px; margin-bottom: 16px;"></i>
+        <h3>3D-модель доступна в туре</h3>
+        <button id="start3dTourBtn">▶ 3D-тур</button>
+    </div>
+</div>
+
+<header class="content-layer">
+    <div class="logo">3dbuild</div>
+    <div class="menu-icon" id="menuToggle"><i class="fas fa-bars"></i></div>
+    <nav>
+        <ul id="navMenu">
+            <li><a href="#services">Услуги</a></li>
+            <li><a href="#projects">Проекты</a></li>
+            <li><a href="#contact-form">Контакты</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main class="content-layer">
+    <section class="hero">
+        <div class="hero-content">
+            <h1>3dbuild – ЦИМ-модели для строительства будущего</h1>
+            <p>От LOD 200 до LOD 400. Точность данных, контроль коллизий, экономия ресурсов.</p>
+            <div class="btn-group">
+                <button class="btn-primary" id="calcBtn">Рассчитать проект</button>
+                <button class="btn-secondary" id="fullscreenModelBtn">Смотреть демо-модель</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="technologies">
+        <h2 class="section-title">Наши технологии</h2>
+        <div class="tech-grid">
+            <div class="tech-icon"><i class="fab fa-rev"></i><span>Revit</span></div>
+            <div class="tech-icon"><i class="fas fa-cubes"></i><span>Navisworks</span></div>
+            <div class="tech-icon"><i class="fas fa-drafting-compass"></i><span>Tekla</span></div>
+            <div class="tech-icon"><i class="fas fa-building"></i><span>ArchiCAD</span></div>
+            <div class="tech-icon"><i class="fas fa-file-alt"></i><span>IFC</span></div>
+        </div>
+    </section>
+
+    <section id="services">
+        <h2 class="section-title">Ключевые услуги</h2>
+        <div class="services-grid">
+            <div class="service-card"><i class="fas fa-chalkboard-user"></i><h3>BIM-консалтинг</h3><p>Внедрение стандартов, аудит моделей, регламенты.</p></div>
+            <div class="service-card"><i class="fas fa-cube"></i><h3>Создание ЦИМ моделей</h3><p>Архитектура, конструкции, инженерия LOD 300-400.</p></div>
+            <div class="service-card"><i class="fas fa-bolt"></i><h3>Клишинг (Clash Detection)</h3><p>Поиск и устранение коллизий, снижение рисков.</p></div>
+            <div class="service-card"><i class="fas fa-chart-line"></i><h3>4D/5D моделирование</h3><p>Календарные графики и сметы с привязкой к модели.</p></div>
+        </div>
+    </section>
+
+    <section id="projects">
+        <h2 class="section-title">Кейсы</h2>
+        <div class="cases-grid">
+            <div class="case-card"><i class="fas fa-city"></i><h3>ЖК «Небо» (44 этажа)</h3><p>ЦИМ-модель LOD 350, выявлено 214 коллизий, экономия 12 млн руб.</p><small>+25% эффективности</small></div>
+            <div class="case-card"><i class="fas fa-industry"></i><h3>Завод «Металлург»</h3><p>Инженерная модель LOD 400, интеграция с ERP-системой.</p><small>Точность данных 99.7%</small></div>
+            <div class="case-card"><i class="fas fa-store"></i><h3>ТРЦ «Атмосфера»</h3><p>Клишинг за 3 дня, оптимизация прохода коммуникаций.</p><small>Сокращение сроков на 20%</small></div>
+        </div>
+    </section>
+
+    <section id="contact-form">
+        <h2 class="section-title">Получите расчёт проекта</h2>
+        <div class="form-container">
+            <form id="leadForm">
+                <div class="form-group"><input type="text" id="name" placeholder="Ваше имя" required></div>
+                <div class="form-group"><input type="tel" id="phone" placeholder="Телефон" required></div>
+                <div class="form-group">
+                    <select id="objectType">
+                        <option value="жилой">Жилой объект</option>
+                        <option value="промышленный">Промышленный объект</option>
+                        <option value="инфраструктура">Инфраструктура</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" style="width:100%">Отправить заявку</button>
+            </form>
+        </div>
+    </section>
+</main>
+
+<!-- ПОДВАЛ - УМЕНЬШЕННЫЙ -->
+<footer>
+    <div class="footer-container">
+        <div class="footer-col">
+            <h4>3dbuild</h4>
+            <p>Разработка информационных моделей зданий (ЦИМ/BIM) уровней LOD 300–400.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-telegram"></i></a>
+                <a href="#"><i class="fab fa-whatsapp"></i></a>
+                <a href="#"><i class="fab fa-vk"></i></a>
+                <a href="#"><i class="fab fa-youtube"></i></a>
+            </div>
+        </div>
+        <div class="footer-col">
+            <h4>Контакты</h4>
+            <div class="contact-info">
+                <p><i class="fas fa-phone"></i> +7 (495) 000-00-00</p>
+                <p><i class="fas fa-envelope"></i> info@3dbuild.ru</p>
+                <p><i class="fas fa-map-marker-alt"></i> Москва, ул. Строителей, 15</p>
+                <p><i class="fas fa-clock"></i> Пн-Пт: 9:00 – 19:00</p>
+            </div>
+        </div>
+        <div class="footer-col">
+            <h4>Навигация</h4>
+            <p><a href="#services" style="color:#aaa; text-decoration:none;">→ Услуги</a></p>
+            <p><a href="#projects" style="color:#aaa; text-decoration:none;">→ Проекты</a></p>
+            <p><a href="#contact-form" style="color:#aaa; text-decoration:none;">→ Контакты</a></p>
+            <p><a href="#technologies" style="color:#aaa; text-decoration:none;">→ Технологии</a></p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 3dbuild — BIM/ЦИМ моделирование. Все права защищены.</p>
+    </div>
+</footer>
+
+<script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
+    }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+    const container = document.getElementById('canvas-container');
+    const loaderDiv = document.getElementById('loader');
+    const progressFill = document.getElementById('progressFill');
+    const loadingPercentSpan = document.getElementById('loadingPercent');
+    const staticPreviewDiv = document.getElementById('staticPreview');
+    const start3dTourBtn = document.getElementById('start3dTourBtn');
+    const calcBtn = document.getElementById('calcBtn');
+    const fullscreenBtn = document.getElementById('fullscreenModelBtn');
+
+    let scene, camera, renderer, controls, modelGroup;
+    let isMobile = window.innerWidth <= 768;
+    let webglSupported = true;
+    let modelLoaded = false;
+    let loadTimeout;
+
+    if (!window.WebGLRenderingContext) webglSupported = false;
+
+    loadTimeout = setTimeout(() => {
+        if (!modelLoaded && !isMobile) {
+            console.warn('3D модель не загрузилась за 8 секунд, показываем статику');
+            if (loaderDiv) loaderDiv.style.display = 'none';
+            staticPreviewDiv.classList.add('active');
+        }
+    }, 8000);
+
+    function init3D() {
+        if (!webglSupported) {
+            loaderDiv.style.display = 'none';
+            staticPreviewDiv.classList.add('active');
+            return;
+        }
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0a1a);
+        scene.fog = new THREE.FogExp2(0x0a0a1a, 0.008);
+
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(8, 6, 12);
+        
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = (!isMobile);
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.6;
+        
+        container.appendChild(renderer.domElement);
+
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 1.5;
+        controls.enableZoom = true;
+        controls.zoomSpeed = 1.2;
+        controls.enablePan = true;
+        controls.target.set(0, 2, 0);
+
+        renderer.domElement.addEventListener('mouseenter', () => { if (controls) controls.autoRotate = false; });
+        renderer.domElement.addEventListener('mouseleave', () => { if (controls && !isMobile) controls.autoRotate = true; });
+
+        const ambientLight = new THREE.AmbientLight(0x556688, 0.85);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xfff5e6, 1.8);
+        dirLight.position.set(5, 12, 4);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        scene.add(dirLight);
+        
+        const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight2.position.set(-3, 8, -4);
+        scene.add(dirLight2);
+        
+        const fillLight = new THREE.PointLight(0x88aaff, 0.7);
+        fillLight.position.set(0, -1, 1);
+        scene.add(fillLight);
+        
+        const frontLight = new THREE.PointLight(0xffcc88, 0.6);
+        frontLight.position.set(2, 3, 6);
+        scene.add(frontLight);
+        
+        const backLight = new THREE.PointLight(0xffaa66, 0.5);
+        backLight.position.set(-2, 5, -6);
+        scene.add(backLight);
+        
+        const cameraLight = new THREE.DirectionalLight(0xffffff, 0.7);
+        cameraLight.position.set(0, 2, 3);
+        camera.add(cameraLight);
+        scene.add(camera);
+        
+        const topLight = new THREE.PointLight(0xaaccff, 0.5);
+        topLight.position.set(0, 8, 0);
+        scene.add(topLight);
+
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+        dracoLoader.preload();
+        
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.setDRACOLoader(dracoLoader);
+        
+        const modelPaths = ['assets/model.glb', './model.glb', 'model.glb'];
+        let currentPathIndex = 0;
+        
+        function tryLoadModel() {
+            if (currentPathIndex >= modelPaths.length) {
+                console.error('Не удалось загрузить модель ни по одному из путей');
+                clearTimeout(loadTimeout);
+                loaderDiv.style.display = 'none';
+                staticPreviewDiv.classList.add('active');
+                return;
+            }
+            
+            const modelPath = modelPaths[currentPathIndex];
+            console.log('Попытка загрузить модель по пути:', modelPath);
+            
+            gltfLoader.load(modelPath, 
+                (gltf) => {
+                    modelGroup = gltf.scene;
+                    scene.add(modelGroup);
+
+                    modelGroup.traverse((child) => {
+                        if (child.isMesh) {
+                            const name = child.name.toLowerCase();
+                            child.geometry.computeBoundingBox();
+                            const box = child.geometry.boundingBox;
+                            const width = box.max.x - box.min.x;
+                            const height = box.max.y - box.min.y;
+                            const depth = box.max.z - box.min.z;
+                            
+                            if (name.includes('window') || name.includes('окно') || name.includes('glass') || 
+                                (depth < 0.3 && height > 1.2 && height < 3.0 && width > 0.8)) {
+                                child.material = new THREE.MeshPhysicalMaterial({
+                                    color: 0xc8e4ff, metalness: 0.95, roughness: 0.08,
+                                    transparent: true, opacity: 0.55, clearcoat: 1.0,
+                                    clearcoatRoughness: 0.05, reflectivity: 0.3, side: THREE.DoubleSide
+                                });
+                                console.log('✅ Окно обработано:', child.name);
+                            }
+                            else if (name.includes('frame') || name.includes('рама') || name.includes('mullion') ||
+                                (depth > 0.05 && depth < 0.2 && (width < 0.2 || height < 0.2))) {
+                                child.material = new THREE.MeshStandardMaterial({
+                                    color: 0x4a5a6a, metalness: 0.7, roughness: 0.3, emissive: 0x111111
+                                });
+                                console.log('✅ Рама обработана:', child.name);
+                            }
+                            else if (name.includes('door') || name.includes('дверь') || 
+                                (height > 1.8 && height < 2.5 && width > 0.7 && width < 1.3 && depth < 0.2)) {
+                                child.material = new THREE.MeshStandardMaterial({
+                                    color: 0x8B5A2B, metalness: 0.2, roughness: 0.4, emissive: 0x221100
+                                });
+                                console.log('✅ Дверь обработана:', child.name);
+                            }
+                        }
+                    });
+                    
+                    modelGroup.traverse(child => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = !isMobile;
+                        }
+                    });
+                    
+                    const box = new THREE.Box3().setFromObject(modelGroup);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 5.0 / maxDim;
+                    if (scale < 0.99 || scale > 1.01) {
+                        modelGroup.scale.set(scale, scale, scale);
+                        const newBox = new THREE.Box3().setFromObject(modelGroup);
+                        const newCenter = newBox.getCenter(new THREE.Vector3());
+                        modelGroup.position.sub(newCenter);
+                    } else {
+                        modelGroup.position.sub(center);
+                    }
+                    
+                    controls.target.set(0, 0, 0);
+                    camera.position.set(8, 6, 12);
+                    controls.update();
+                    
+                    modelLoaded = true;
+                    clearTimeout(loadTimeout);
+                    loaderDiv.style.opacity = '0';
+                    setTimeout(() => loaderDiv.style.display = 'none', 500);
+                },
+                (xhr) => {
+                    const percent = (xhr.loaded / xhr.total) * 100;
+                    progressFill.style.width = percent + '%';
+                    loadingPercentSpan.innerText = Math.floor(percent);
+                },
+                (error) => {
+                    console.warn(`Ошибка загрузки по пути ${modelPath}:`, error);
+                    currentPathIndex++;
+                    tryLoadModel();
+                }
+            );
+        }
+        
+        tryLoadModel();
+        animate();
+    }
+    
+    function animate() {
+        if (!renderer || !scene) return;
+        requestAnimationFrame(animate);
+        if (controls) controls.update();
+        if (renderer && scene && camera) renderer.render(scene, camera);
+    }
+    
+    if (isMobile) {
+        loaderDiv.style.display = 'none';
+        staticPreviewDiv.classList.add('active');
+        start3dTourBtn.addEventListener('click', () => {
+            staticPreviewDiv.classList.remove('active');
+            isMobile = false;
+            webglSupported = true;
+            init3D();
+        });
+    } else if (webglSupported) {
+        init3D();
+    } else {
+        loaderDiv.style.display = 'none';
+        staticPreviewDiv.classList.add('active');
+    }
+    
+    fullscreenBtn.addEventListener('click', () => {
+        if (!modelLoaded && !isMobile) {
+            if (!scene) init3D();
+        }
+        if (renderer && renderer.domElement) {
+            if (renderer.domElement.requestFullscreen) renderer.domElement.requestFullscreen();
+            else if (renderer.domElement.webkitRequestFullscreen) renderer.domElement.webkitRequestFullscreen();
+        } else if (isMobile && staticPreviewDiv.classList.contains('active')) {
+            start3dTourBtn.click();
+        }
+    });
+    
+    document.getElementById('leadForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('Спасибо! Ваша заявка принята. Менеджер свяжется в ближайшее время.');
+        document.getElementById('leadForm').reset();
+    });
+    
+    calcBtn.addEventListener('click', () => {
+        document.getElementById('contact-form').scrollIntoView({ behavior: 'smooth' });
+    });
+    
+    const menuToggle = document.getElementById('menuToggle');
+    const navMenu = document.getElementById('navMenu');
+    menuToggle.addEventListener('click', () => {
+        navMenu.classList.toggle('active');
+    });
+    
+    document.querySelectorAll('nav ul li a').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetId = this.getAttribute('href').substring(1);
+            const target = document.getElementById(targetId);
+            if (target) target.scrollIntoView({ behavior: 'smooth' });
+            if (navMenu.classList.contains('active')) navMenu.classList.remove('active');
+        });
+    });
+    
+    window.addEventListener('resize', () => {
+        if (renderer && camera) {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        const newMobile = window.innerWidth <= 768;
+        if (newMobile !== isMobile && !modelLoaded && !staticPreviewDiv.classList.contains('active')) {
+            location.reload();
+        }
+    });
+</script>
+</body>
+</html>
